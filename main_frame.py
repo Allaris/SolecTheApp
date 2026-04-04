@@ -1,3 +1,4 @@
+#gałąź testowa
 import customtkinter as ctk
 import protocols
 import threading
