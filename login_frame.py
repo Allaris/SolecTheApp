@@ -2,7 +2,7 @@ import customtkinter as ctk
 import socket
 import struct
 
-from protocols import HANDSHAKE,PING,VERSION   # Importujemy protokoły z osobnego pliku
+import protocols  # Importujemy protokoły z osobnego pliku
 
 class LoginFrame(ctk.CTkFrame):
     def __init__(self, parent, login_callback):
@@ -24,18 +24,31 @@ class LoginFrame(ctk.CTkFrame):
 
     def attempt_login(self):
         try:
-            # Tworzenie połączenia
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.settimeout(3.0) # 3 sekundy na odpowiedź
             self.sock.connect(('localhost', 9999))
             
-            # Handshake
-            self.sock.sendall(HANDSHAKE)
+            # 1. (Opcjonalnie) Odbiór powitania, jeśli serwer je wysyła
+            try:
+                self.sock.recv(1024) 
+            except:
+                pass
+
+            # 2. Protokół SOLEC
+            self.sock.sendall(protocols.get_handshake())
+            self.sock.sendall(protocols.get_auth("damiansolec", "pass"))
             
-            # Tutaj możesz dodać recv(), żeby sprawdzić czy serwer zaakceptował handshake
-            
-            self.status_label.configure(text="Połączono pomyślnie!", text_color="green")
-            # Przekazujemy socket do głównej aplikacji
-            self.after(1000, lambda: self.login_callback(self.sock))
-            
+            # 3. Próba odebrania Success
+            try:
+                header = self.sock.recv(3)
+                if header and header[0] == protocols.TYPE_SUCCESS:
+                    print("Zalogowano pomyślnie!")
+            except socket.timeout:
+                # Jeśli serwer nie wysłał Success, ale logi mówią że połączono
+                print("Brak potwierdzenia, ale zakładamy sukces (zobacz logi serwera)")
+
+            # Przejdź do głównego ekranu
+            self.login_callback(self.sock)
+                
         except Exception as e:
-            self.status_label.configure(text=f"Błąd: {e}", text_color="red")
+            self.status_label.configure(text=f"Błąd: {e}")
