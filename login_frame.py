@@ -1,3 +1,4 @@
+#main
 import customtkinter as ctk
 import socket
 import struct

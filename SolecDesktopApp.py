@@ -1,3 +1,4 @@
+#main
 import customtkinter as ctk
 import socket
 import struct
@@ -6,7 +7,7 @@ from login_frame import LoginFrame    # Importujemy klasę z pliku login_frame.p
 from main_frame import MainFrame    # Importujemy klasę z pliku main_frame.py
 
 # --- KONFIGURACJA PROTOKOŁU ---
-from protocols import HANDSHAKE,PING,VERSION   # Importujemy protokoły z osobnego pliku
+import protocols   # Importujemy protokoły z osobnego pliku
 
 class SolecApp(ctk.CTk):
     def __init__(self):

@@ -1,3 +1,5 @@
+#main
+
 # wsl
 # cd ~/solec/cmd/daemon
 # go run main.go
