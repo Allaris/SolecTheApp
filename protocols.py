@@ -7,6 +7,9 @@
 import struct
 import time
 
+# login: cokolwiek
+# hasło: valid
+
 # --- KONFIGURACJA TYPÓW (Tabela 1) ---#
 TYPE_SUCCESS   = 0x01
 TYPE_ERROR     = 0x02

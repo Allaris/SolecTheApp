@@ -43,11 +43,21 @@ class MainFrame(ctk.CTkFrame):
         if content:
             try:
                 # Wysyłaj zawsze jako self.username
-                packet = protocols.get_message_packet(self.username, "*", content)
+                target = "user2@localhost"  # Przykładowy target
+                packet = protocols.get_message_packet(self.username, target, content)
                 self.sock.sendall(packet)
+
+                my_text = f"Ty (do {target}): {content}"
+                self.display_text(my_text)
+                
+                # 3. Czyścimy pole wpisywania
                 self.msg_entry.delete(0, 'end')
             except Exception as e:
                 print(f"Błąd wysyłania: {e}")
+
+            #     self.msg_entry.delete(0, 'end')
+            # except Exception as e:
+            #     print(f"Błąd wysyłania: {e}")
 
     def receive_loop(self):
         print("Wątek odbioru: AKTYWNY")
@@ -70,7 +80,7 @@ class MainFrame(ctk.CTkFrame):
                     if data:
                         sender = data['source']
                         # Jeśli to my, napisz "Ty", jeśli ktoś inny - nick
-                        display_name = "Ty" if sender == self.username else sender
+                        display_name = self.username if sender == self.username else sender
                         text = f"{display_name}: {data['content']}"
                         
                         # Przekazujemy tekst do GUI (lambda m=text zamraża treść)
