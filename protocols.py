@@ -4,6 +4,10 @@
 # cd ~/solec/cmd/daemon
 # go run main.go
 
+# wsl
+# cd ~/solec
+# ./tools/run.sh
+
 import struct
 import time
 

@@ -26,7 +26,7 @@ class LoginFrame(ctk.CTkFrame):
     def attempt_login(self):
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.sock.settimeout(3.0) # 3 sekundy na odpowiedź
+            self.sock.settimeout(1.0) # 3 sekundy na odpowiedź
             self.sock.connect(('localhost', 9999))
             
             # 1. (Opcjonalnie) Odbiór powitania, jeśli serwer je wysyła
@@ -46,8 +46,9 @@ class LoginFrame(ctk.CTkFrame):
                     print("Zalogowano pomyślnie!")
             except socket.timeout:
                 # Jeśli serwer nie wysłał Success, ale logi mówią że połączono
-                print("Brak potwierdzenia, ale zakładamy sukces (zobacz logi serwera)")
-
+                # print("Brak potwierdzenia, ale zakładamy sukces (zobacz logi serwera)")
+                pass
+            
             # Przejdź do głównego ekranu
             self.login_callback(self.sock)
                 
