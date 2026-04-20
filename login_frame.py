@@ -66,12 +66,14 @@ class LoginFrame(ctk.CTkFrame):
 
                 m_type, m_len = struct.unpack("!BH", header)
                 
-                # SPRAWDZAMY TYP:
+                # Udane logowanie
                 if m_type == protocols.TYPE_SUCCESS:
                     print("Zalogowano pomyślnie!")
                     self.status_label.configure(text="Zalogowano!", text_color="green")
+                    
+                    username = self.user_entry.get()
                     # TYLKO TUTAJ PRZECHODZIMY DALEJ:
-                    self.login_callback(self.sock)
+                    self.login_callback(self.sock, username)
                 else:
                     # Serwer przysłał coś innego (np. TYPE_ERROR)
                     self.status_label.configure(text="Błędny login lub hasło", text_color="red")

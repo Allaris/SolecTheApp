@@ -31,18 +31,18 @@ class SolecApp(ctk.CTk):
         login_frame = LoginFrame(self.container, self.on_login_success)
         login_frame.pack(fill="both", expand=True)
 
-    def show_main_screen(self):
+    def show_main_screen(self, username):
         self.clear_container()
-        main_frame = MainFrame(self.container, self.client_socket)
+        main_frame = MainFrame(self.container, self.client_socket, username)
         main_frame.pack(fill="both", expand=True)
 
     def clear_container(self):
         for widget in self.container.winfo_children():
             widget.destroy()
 
-    def on_login_success(self, connected_socket):
+    def on_login_success(self, connected_socket, username):
         self.client_socket = connected_socket
-        self.show_main_screen()
+        self.show_main_screen(username)
 
 
 

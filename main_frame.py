@@ -5,10 +5,10 @@ import threading
 import struct
 
 class MainFrame(ctk.CTkFrame):
-    def __init__(self, parent, client_socket):
+    def __init__(self, parent, client_socket, username):
         super().__init__(parent)
         self.sock = client_socket
-        self.username = "damiansolec" 
+        self.username = username
 
         # --- Interfejs ---
         self.label = ctk.CTkLabel(self, text="Czat SOLEC", font=("Arial", 20))
@@ -47,7 +47,7 @@ class MainFrame(ctk.CTkFrame):
                 packet = protocols.get_message_packet(self.username, target, content)
                 self.sock.sendall(packet)
 
-                my_text = f"Ty (do {target}): {content}"
+                my_text = f"{self.username} (do {target}): {content}"
                 self.display_text(my_text)
                 
                 # 3. Czyścimy pole wpisywania

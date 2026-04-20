@@ -33,7 +33,7 @@ def decode_string(payload, offset):
 
 def get_handshake():
     """Tabela 4: Typ 3, Długość 2, Ver 0.1 (zgodnie z Twoim testem)"""
-    payload = struct.pack(">BB", 0, 1)
+    payload = struct.pack(">BBB", 0, 1, 1)
     return struct.pack("!BH", TYPE_HANDSHAKE, len(payload)) + payload
 
 def get_auth(user, password):
@@ -67,9 +67,11 @@ def parse_message(payload):
         return {
             "source": source,
             "target": target,
-            "time": time.ctime(timestamp),
+            # "time": time.ctime(timestamp),
             "content": content
         }
     except Exception as e:
         print(f"Błąd dekodowania: {e}")
         return None
+    
+    # timestamk wyłączony bo nie działa Unixtimestamp na go ?
