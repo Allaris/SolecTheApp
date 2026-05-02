@@ -1,4 +1,4 @@
-#main
+#gałąź main
 import customtkinter as ctk
 import socket
 import struct
@@ -7,14 +7,14 @@ from login_frame import LoginFrame    # Importujemy klasę z pliku login_frame.p
 from main_frame import MainFrame    # Importujemy klasę z pliku main_frame.py
 
 # --- KONFIGURACJA PROTOKOŁU ---
-import protocols   # Importujemy protokoły z osobnego pliku
+import protocols  # Importujemy protokoły z osobnego pliku
 
 class SolecApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
         self.title("Solec Desktop App")
-        self.geometry("400x300")
+        self.geometry("1280x720")
         
         # Wspólne zasoby
         self.client_socket = None
@@ -31,18 +31,18 @@ class SolecApp(ctk.CTk):
         login_frame = LoginFrame(self.container, self.on_login_success)
         login_frame.pack(fill="both", expand=True)
 
-    def show_main_screen(self):
+    def show_main_screen(self, username):
         self.clear_container()
-        main_frame = MainFrame(self.container, self.client_socket)
+        main_frame = MainFrame(self.container, self.client_socket, username)
         main_frame.pack(fill="both", expand=True)
 
     def clear_container(self):
         for widget in self.container.winfo_children():
             widget.destroy()
 
-    def on_login_success(self, connected_socket):
+    def on_login_success(self, connected_socket, username):
         self.client_socket = connected_socket
-        self.show_main_screen()
+        self.show_main_screen(username)
 
 
 
