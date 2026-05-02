@@ -14,7 +14,7 @@ class SolecApp(ctk.CTk):
         super().__init__()
 
         self.title("Solec Desktop App")
-        self.geometry("400x300")
+        self.geometry("1280x720")
         
         # Wspólne zasoby
         self.client_socket = None

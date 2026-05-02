@@ -10,26 +10,30 @@ class LoginFrame(ctk.CTkFrame):
         super().__init__(parent)
         self.login_callback = login_callback
 
-        self.label = ctk.CTkLabel(self, text="Logowanie do serwera", font=("Arial", 20))
-        self.label.pack(pady=20)
+        # --- Interfejs Logowania ---
+        self.label = ctk.CTkLabel(self, text="Logowanie do serwera", font=("Arial", 24))
+        self.label.place(relx=0.5, rely=0.2, anchor="center")
 
         # --- Pole Login ---
-        self.user_entry = ctk.CTkEntry(self, placeholder_text="Nazwa użytkownika", width=200)
-        self.user_entry.pack(pady=5)
+        self.user_entry = ctk.CTkEntry(self, placeholder_text="Nazwa użytkownika", width=300, height=40, font=("Arial", 20))
+        self.user_entry.place(relx=0.5, rely=0.3, anchor="center")
 
         # --- Pole Hasło ---
-        self.pass_entry = ctk.CTkEntry(self, placeholder_text="Hasło", width=200, show="*")
-        self.pass_entry.pack(pady=5)
+        self.pass_entry = ctk.CTkEntry(self, placeholder_text="Hasło", width=300, height=40, show="*", font=("Arial", 20))
+        self.pass_entry.place(relx=0.5, rely=0.4, anchor="center")
 
+        # --- Przycisk Logowania ---
         self.connect_btn = ctk.CTkButton(
-            self, text="Połącz i Handshake", 
+            self, text="Zaloguj", width=200, height=40, font=("Arial", 20),
             command=self.attempt_login,
             fg_color="#28a745"
+            
         )
-        self.connect_btn.pack(pady=10)
+        self.connect_btn.place(relx=0.5, rely=0.5, anchor="center")
 
+        # --- Status Logowania ---
         self.status_label = ctk.CTkLabel(self, text="", text_color="gray")
-        self.status_label.pack()
+        self.status_label.place(relx=0.5, rely=0.6, anchor="center")
 
     def attempt_login(self):
         # Pobieramy to, co użytkownik wpisał w okienka
