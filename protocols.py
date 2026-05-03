@@ -45,25 +45,64 @@ def get_auth(user, password):
 
 def get_join_channel(my_username, target_channel):
     """
-    my_username: "damian" (z GUI)
-    target_channel: "#test@localhost"
+    Tworzy pakiet JOIN (0x07) z oczyszczonymi danymi.
+    User: damian@localhost bez portu
+    Channel: test (bez # i bez @localhost)
     """
-    # 1. Naprawa Nicku na damian@localhost
-    if "@" not in my_username:
-        full_user_address = f"{my_username}@localhost"
+    # 1. Użytkownik: Musi być identyczny z sesją na serwerze
+    # Zgodnie z Twoim logiem: 'tata@localhost'
+    clean_user = my_username.split(':')[0].strip()
+    if "@" not in clean_user:
+        clean_user = f"{clean_user}@localhost"
+
+    # 2. Kanał: Usuwamy '#' na początku oraz wszystko od '@' w górę
+    # '#test@localhost' -> 'test'
+    clean_room = target_channel.lstrip('#').split('@')[0].strip()
     
-    # 3. dołącz
-    JOIN_MODE = 0x01 
+    # 3. Tryb: 0x01 (in_channel) zgodnie z Tabelą 10
+    mode = 0x01 
     
+    # 4. Budowa payloadu: String + String + Uint8
     payload = (
-        encode_string(full_user_address) + 
-        encode_string(target_channel) + 
-        struct.pack("!B", JOIN_MODE)
+        encode_string(clean_user) + 
+        encode_string(clean_room) + 
+        struct.pack("!B", mode)
     )
     
-    # Nagłówek: Typ 0x07 (USERMODE)
+    # Nagłówek: Typ 0x07, Długość payloadu
+    header = struct.pack("!BH", TYPE_USERMODE, len(payload))
+    
+    # Debugowanie bajtów przed wysłaniem
+    full_packet = header + payload
+    print(f"DEBUG JOIN: User='{clean_user}', Room='{clean_room}'")
+    print(f"RAW PACKET: {full_packet}")
+    
+    return full_packet
+
+
+def get_leave_channel(my_username, target_channel):
+    """
+    Tabela 9 & 10: Wysyła USERMODE (0x07) z mode 0x00 (leave).
+    """
+    clean_user = my_username.split(':')[0].strip()
+    if "@" not in clean_user:
+        clean_user = f"{clean_user}@localhost"
+
+    # Wyciągamy 'test' z '#test@localhost'
+    clean_room = target_channel.lstrip('#').split('@')[0].strip()
+    
+    # Mode 0x00 = none/leave (odłączenie)
+    mode = 0x00 
+    
+    payload = (
+        encode_string(clean_user) + 
+        encode_string(clean_room) + 
+        struct.pack("!B", mode)
+    )
+    
     header = struct.pack("!BH", TYPE_USERMODE, len(payload))
     return header + payload
+    
 
 
 def get_message_packet(source, target, content):
