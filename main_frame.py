@@ -14,14 +14,29 @@ class MainFrame(ctk.CTkFrame):
         self.channel_buttons_refs = [] # Przechowujemy referencje do przycisków
 
         # --- Konfiguracja siatki głównej ---
-        # Kolumna 0: Czat (rozszerzalna), Kolumna 1: Panel boczny (stały)
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=0) 
+        # Kolumna 0: Panel boczny (stały, po lewej), Kolumna 1: Czat (rozszerzalny, po prawej)
+        self.grid_columnconfigure(0, weight=0)
+        self.grid_columnconfigure(1, weight=1) 
         self.grid_rowconfigure(0, weight=1)
 
-        # --- 1. LEWA STRONA: CZAT ---
+        # --- 1. LEWA STRONA: PANEL BOCZNY (Sidebar) ---
+        self.sidebar = ctk.CTkFrame(self, width=250)
+        self.sidebar.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        
+        self.channels_label = ctk.CTkLabel(self.sidebar, text="KANAŁY I USERZY", font=("Arial", 16, "bold"))
+        self.channels_label.pack(pady=10)
+
+        # Przewijana lista przycisków
+        self.scroll_list = ctk.CTkScrollableFrame(self.sidebar, fg_color="transparent")
+        self.scroll_list.pack(fill="both", expand=True, padx=5, pady=5)
+
+        # Przycisk "+" na dole sidebaru
+        self.add_channel_btn = ctk.CTkButton(self.sidebar, text="+ Dodaj Rozmówcę/Kanał", fg_color="#28a745", hover_color="#218838", command=self.ask_for_target)
+        self.add_channel_btn.pack(pady=10, padx=10)
+
+        # --- 2. PRAWA STRONA: CZAT ---
         self.chat_container = ctk.CTkFrame(self, fg_color="transparent")
-        self.chat_container.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        self.chat_container.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
         self.chat_container.grid_columnconfigure(0, weight=1)
         self.chat_container.grid_rowconfigure(0, weight=1)
 
@@ -35,21 +50,6 @@ class MainFrame(ctk.CTkFrame):
 
         self.send_btn = ctk.CTkButton(self.chat_container, text="Wyślij", width=100, height=40, font=("Arial", 20), command=self.send_message)
         self.send_btn.grid(row=1, column=1, sticky="e")
-
-        # --- 2. PRAWA STRONA: PANEL BOCZNY (Sidebar) ---
-        self.sidebar = ctk.CTkFrame(self, width=250)
-        self.sidebar.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
-        
-        self.channels_label = ctk.CTkLabel(self.sidebar, text="KANAŁY I USERZY", font=("Arial", 16, "bold"))
-        self.channels_label.pack(pady=10)
-
-        # Przewijana lista przycisków
-        self.scroll_list = ctk.CTkScrollableFrame(self.sidebar, fg_color="transparent")
-        self.scroll_list.pack(fill="both", expand=True, padx=5, pady=5)
-
-        # Przycisk "+" na dole sidebaru
-        self.add_channel_btn = ctk.CTkButton(self.sidebar, text="+ Dodaj Rozmówcę/Kanał", fg_color="#28a745", hover_color="#218838", command=self.ask_for_target)
-        self.add_channel_btn.pack(pady=10, padx=10)
 
         # --- Inicjalizacja listy userów ---
         initial_users = ["user1", "user2", "user3"]
@@ -118,7 +118,6 @@ class MainFrame(ctk.CTkFrame):
                 # Dodajemy do listy i zaznaczamy
                 self.add_item_to_list(full_address, is_channel=False)
                 self.select_target(full_address)
-
 
     # Protokół dołączania do kanału
     def join_channel(self, address): 
