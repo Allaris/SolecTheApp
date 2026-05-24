@@ -58,8 +58,9 @@ class LoginFrame(ctk.CTkFrame):
 
             # 2. Protokół SOLEC
             self.sock.sendall(protocols.get_handshake())
-            self.sock.sendall(protocols.get_auth(username, password))
-            
+            self.sock.sendall(protocols.get_auth(f"{username}@localhost", password))     
+            # chwilowo jest +localhost ale doda sie jakas zmienna na adres.
+
             # 3. Próba odebrania Success
             try:
                 header = self.sock.recv(3)

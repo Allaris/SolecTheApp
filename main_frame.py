@@ -5,6 +5,8 @@ import threading
 import struct
 import os
 
+from datetime import datetime
+
 class MainFrame(ctk.CTkFrame):
     def __init__(self, parent, client_socket, username):
         super().__init__(parent)
@@ -158,31 +160,61 @@ class MainFrame(ctk.CTkFrame):
             self.chat_display.insert("end", "Wybierz rozmówcę...")
             self.chat_display.configure(state="disabled")
 
+    # Funkcja wyboru aktywnego okna czatu (kanał lub użytkownik) i synchronizacji historii
     def select_target(self, address):
-        # przełącza odbiorce i wczysuje historię
         if self.current_recipient == address: return
         self.current_recipient = address
 
-        # Wizualne zaznaczenie przycisku
+        # 1. Wizualne zaznaczenie przycisku
         for addr, btn in self.channel_buttons_refs:
             if addr == address:
                 btn.configure(fg_color="#28a745")
             else:
                 btn.configure(fg_color="#3b3b3b")
 
-        # Odświeżenie okna czatu z historii
+        # 2. AUTOMATYCZNY JOIN (Tylko dla kanałów z #)
+        # Serwer MUSI wiedzieć, że jesteśmy w pokoju, zanim da nam historię
+        if address.startswith('#'):
+            try:
+                print(f"DEBUG SYNC: Wysyłam automatyczny JOIN dla {address}, aby odblokować historię")
+                join_packet = protocols.get_join_channel(self.my_username, address)
+                self.client_socket.sendall(join_packet)
+                
+                # Krótka przerwa (opcjonalnie, milisekundy), aby serwer przetworzył JOIN przed HISTORY
+                time.sleep(0.05) 
+            except Exception as e:
+                print(f"Błąd auto-join: {e}")
+
+        # 3. SYNCHRONIZACJA HISTORII Z SERWEREM
+        since_time = self.get_last_timestamp_from_file(address)
+        print(f"DEBUG SYNC: Proszę o historię dla {address} od timestampu: {since_time}")
+        
+        try:
+            packet = protocols.get_history_packet(address, since_timestamp=since_time, count=100, offset=0)
+            self.client_socket.sendall(packet)
+        except Exception as e:
+            print(f"Błąd wysyłania prośby o historię: {e}")
+
+        # 4. Odświeżenie okna czatu z lokalnego pliku
         self.load_history(address)
+
+
+    def get_history_filename(self, address):
+        """Zwraca zawsze spójną nazwę pliku, np. history_ch_test.txt lub history_usr_user1.txt"""
+        clean_addr = address.split('@')[0].strip().lower()
+        if clean_addr.startswith('#'):
+            safe_name = clean_addr.replace('#', 'ch_')
+        else:
+            safe_name = f"usr_{clean_addr}"
+        return f"history_{safe_name}.txt"
+
 
     def load_history(self, address):
         self.chat_display.configure(state="normal")
         self.chat_display.delete("1.0", "end")
         
-        # "safe_name" jak przy zapisie do pliku, np. '#test@localhost' -> 'history_ch_test'
-        clean_addr = address.split('@')[0].strip().lower()
-        safe_name = clean_addr.replace('#', 'ch_')
-        filename = f"history_{safe_name}.txt"
-        
-        print(f"DEBUG: Próbuję wczytać plik: {filename}")
+        filename = self.get_history_filename(address)
+        print(f"DEBUG: Próbuję wczytać plik historii: {filename}")
 
         if os.path.exists(filename):
             try:
@@ -203,34 +235,38 @@ class MainFrame(ctk.CTkFrame):
             packet = protocols.get_message_packet(self.my_username, self.current_recipient, content)
             self.client_socket.sendall(packet)
             
-            self.display_text(f"Ja: {content}", self.current_recipient)
+            # --- NOWA LOGIKA: Pobieranie aktualnego czasu lokalnego dla siebie ---
+            from datetime import datetime
+            time_str = datetime.now().strftime('%H:%M:%S')
+            
+            # Wyświetlamy sformatowany tekst: [14:25:01] Ja: treść
+            self.display_text(f"[{time_str}] {self.my_username}: {content}", self.current_recipient)
             self.msg_entry.delete(0, 'end')
         except Exception as e:
             print(f"Błąd wysyłania: {e}")
 
     def display_text(self, text, target):
-    
-        inc_id = target.split('@')[0].strip().lower()
-        curr_id = self.current_recipient.split('@')[0].strip().lower()
-        
-        # generowanie nazwy pliku na podstawie  '#test' -> 'history_ch_test'
-        safe_name = inc_id.replace('#', 'ch_')
-        filename = f"history_{safe_name}.txt"
+        # Target może być 'user1' lub 'user1@localhost' lub '#test@localhost'
+        filename = self.get_history_filename(target)
         
         # Zapisz do pliku
         try:
             with open(filename, "a", encoding="utf-8") as f:
                 f.write(text + "\n")
-        except: pass
+        except Exception as e: 
+            print(f"DEBUG BŁĄD ZAPISU HISTORII: {e}")
 
         # Wyświetl tylko jeśli okno pasuje
+        inc_id = target.split('@')[0].strip().lower()
+        curr_id = self.current_recipient.split('@')[0].strip().lower()
+        
         if inc_id == curr_id:
             self.chat_display.configure(state="normal")
             self.chat_display.insert("end", text + "\n")
             self.chat_display.configure(state="disabled")
             self.chat_display.see("end")
         else:
-            print(f"DEBUG UI: Wiadomość dla {inc_id} zapisała się w tle. Masz otwarte: {curr_id}")
+            print(f"DEBUG UI: Wiadomość dla {inc_id} zapisała się w pliku {filename}. Masz otwarte: {curr_id}")
 
     def receive_exact(self, n):
         data = b''
@@ -246,7 +282,8 @@ class MainFrame(ctk.CTkFrame):
         except Exception as e:
             print(f"--- [DEBUG] Błąd recv: {e} ---")
             return None
-
+    
+    # główna funkcja odbierania - cały czas nasłuchuje, a gdy przyjdzie wiadomość, to ją parsuje i wyświetla w odpowiednim oknie
     def receive_loop(self):
         while True:
             header = self.receive_exact(3)
@@ -281,9 +318,48 @@ class MainFrame(ctk.CTkFrame):
                     if s_clean == my_nick:
                         continue 
 
-                    formatted_msg = f"{s_clean}: {data['content']}"
+
+
+                    # --- NOWA LOGIKA: Formatowanie czasu z serwera ---
+                    from datetime import datetime
+                    # Serwer daje nam sekundy, zamieniamy je na obiekt datetime, a potem na tekst HH:MM:SS
+                    time_str = datetime.fromtimestamp(data['timestamp']).strftime('%H:%M:%S')
+
+                    # Łączymy w format: [14:25:01] user: treść wiadomości
+                    formatted_msg = f"[{time_str}] {s_clean}: {data['content']}"
                     
-                    # Bardzo ważny debug - sprawdzimy co widzi Python
                     print(f"DEBUG RECV: Od={s_clean}, Do={t_clean}, Okno={chat_id}")
                     
                     self.after(0, lambda t=formatted_msg, s=chat_id: self.display_text(t, s))
+    
+    # ostatni timestamp z historii, potrzebny do protokołu history
+    def get_last_timestamp_from_file(self, address):
+        filename = self.get_history_filename(address)
+        
+        if not os.path.exists(filename):
+            return 0
+            
+        try:
+            with open(filename, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+                if not lines:
+                    return 0
+                
+                last_line = lines[-1].strip()
+                if not last_line.startswith("["):
+                    return 0
+                
+                time_str = last_line[1:9] # Wyciąga "HH:MM:SS"
+                
+                from datetime import datetime
+                today_date = datetime.now().strftime("%Y-%m-%d")
+                full_time_str = f"{today_date} {time_str}"
+                
+                dt = datetime.strptime(full_time_str, "%Y-%m-%d %H:%M:%S")
+                return int(dt.timestamp())
+        except Exception as e:
+            print(f"DEBUG HISTORIA: Nie udało się odczytać timestampu ({e})")
+            return 0
+
+
+    
