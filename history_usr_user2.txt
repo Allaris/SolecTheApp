@@ -1,3 +1,12 @@
 [22:55:15] user1: papio
 [23:13:56] damian: ff
 [23:37:07] damian: dd
+[18:54:48] damian: 22
+[19:02:36] damian: f
+[19:15:16] damian: g
+[19:25:10] damian: g
+⚠️ [BŁĄD AUTORYZACJI]: Kod błędu: 2 (0x02)
+[19:25:57] damian: h
+⚠️ [BŁĄD AUTORYZACJI]: Kod błędu: 2 (0x02)
+[19:30:37] damian: r
+⚠️ [BŁĄD AUTORYZACJI]: Kod błędu: 2 (0x02)

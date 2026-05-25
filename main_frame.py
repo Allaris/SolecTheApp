@@ -293,9 +293,25 @@ class MainFrame(ctk.CTkFrame):
             payload = self.receive_exact(m_len)
             
             if m_type == protocols.TYPE_ERROR:
-                # jak odrzyciło
-                err_msg, _ = protocols.decode_string(payload, 0)
-                print(f"!!! SERWER ZGŁOSIŁ BŁĄD: {err_msg}")
+                    # Sprawdzamy, czy payload w ogóle ma sens do dekodowania jako tekst
+                    if payload and len(payload) >= 2:
+                        try:
+                            err_msg, _ = protocols.decode_string(payload, 0)
+                        except Exception:
+                            err_msg = f"Nieznany kod błędu (Surowe bajty: {payload.hex()})"
+                    elif payload:
+                        # Jeśli to tylko 1 bajt, to może być surowy kod błędu z serwera
+                        err_msg = f"Kod błędu: {payload[0]} (0x{payload.hex()})"
+                    else:
+                        err_msg = "Pusty błąd serwera (Brak autoryzacji)"
+                    
+                    print(f"!!! SERWER ZGŁOSIŁ BŁĄD: {err_msg}")
+                    
+                    # Wyświetlamy błąd użytkownikowi
+                    formatted_err = f"⚠️ [BŁĄD AUTORYZACJI]: {err_msg}"
+                    self.after(0, lambda t=formatted_err: self.display_text(t, self.current_recipient))
+                    
+                    continue # PRZECHODZIMY DO KOLEJNEJ WIADOMOŚCI, WĄTEK ŻYJE!
             
             elif m_type == protocols.TYPE_MESSAGE:
                 data = protocols.parse_message(payload)
