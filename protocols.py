@@ -1,20 +1,24 @@
 #gałąź main
 
 # wsl
-# cd ~/solec/cmd/daemon
+# cd ~/solec/cmd/daemon -test
 # go run main.go
 
-# wsl
-# cd ~/solec
-# ./tools/run.sh
+# user_set damian@localhost valid
+
+# perm_set damian@localhost user1@localhost 1 1
+# perm_set user1@localhost dmaian@localhost 1 1
 
 import struct
 import time
 
-# login: cokolwiek
-# hasło: valid
+# login: damian@rctt.net    damian  d2
+# hasło: pgcBJ8qY78JM
+# połączenie: rctt.net:9999 domyślnie
+SERVER_DOMAIN = "rctt.net" # wartość wstepna
 
-# --- KONFIGURACJA TYPÓW (Tabela 1) ---#
+# --- KONFIGURACJA TYPÓW  ---#
+
 TYPE_SUCCESS   = 0x01
 TYPE_ERROR     = 0x02
 TYPE_HANDSHAKE = 0x03
@@ -22,14 +26,16 @@ TYPE_AUTH      = 0x04
 TYPE_MESSAGE   = 0x05
 
 TYPE_USERMODE  = 0x07
+TYPE_HISTORY = 0x08
 
+# String: 2 bajty długości + dane UTF-8
 def encode_string(s):
-    """2.3.3. String: 2 bajty długości + dane UTF-8"""
+    
     encoded = s.encode("utf-8")
     return struct.pack("!H", len(encoded)) + encoded
 
+# Czytania stringów z payloadu, zwraca (string, nowy_offset)
 def decode_string(payload, offset):
-    """Pomocnicza funkcja do czytania stringów z payloadu"""
     length = struct.unpack_from("!H", payload, offset)[0]
     offset += 2
     text = payload[offset : offset + length].decode("utf-8")
@@ -37,65 +43,58 @@ def decode_string(payload, offset):
 
 # --- FUNKCJE DO WYSYŁANIA ---
 
+# Handshake: Typ 3, Długość 2, Ver 0.1 
 def get_handshake():
-    """Tabela 4: Typ 3, Długość 2, Ver 0.1 (zgodnie z Twoim testem)"""
     payload = struct.pack(">BBB", 0, 1, 1)
     return struct.pack("!BH", TYPE_HANDSHAKE, len(payload)) + payload
 
+# Autoryzacja: Typ 4, User (string) + Pass (string)
 def get_auth(user, password):
-    """Tabela 5: Typ 4, User (string) + Pass (string)"""
     payload = encode_string(user) + encode_string(password)
     return struct.pack("!BH", TYPE_AUTH, len(payload)) + payload
 
+# Dołączanie do kanału. UserMode: Typ 7, User (string) + Channel (string) + Mode (1 byte)
 def get_join_channel(my_username, target_channel):
-    """
-    Tworzy pakiet JOIN (0x07) z oczyszczonymi danymi.
-    User: damian@localhost bez portu
-    Channel: test (bez # i bez @localhost)
-    """
-    # 1. Użytkownik: Musi być identyczny z sesją na serwerze
-    # Zgodnie z Twoim logiem: 'tata@localhost'
+    # Czyszczenie użytkownika (odcina ewentualny port i sprawdza czy jest @SERVER_DOMAIN)
     clean_user = my_username.split(':')[0].strip()
     if "@" not in clean_user:
-        clean_user = f"{clean_user}@localhost"
+        clean_user = f"{clean_user}@{SERVER_DOMAIN}"
 
-    # 2. Kanał: Usuwamy '#' na początku oraz wszystko od '@' w górę
-    # '#test@localhost' -> 'test'
-    clean_room = target_channel.lstrip('#').split('@')[0].strip()
+    # Kanał: Zostawia CAŁY adres, dba tylko o to, żeby miał '#' na początku
+    clean_room = target_channel.strip()
+    if not clean_room.startswith('#'):
+        clean_room = f"#{clean_room}"
+    if "@" not in clean_room:
+        clean_room = f"{clean_room}@{SERVER_DOMAIN}"
     
-    # 3. Tryb: 0x01 (in_channel) zgodnie z Tabelą 10
+    # Mode 0x01 = join
     mode = 0x01 
     
-    # 4. Budowa payloadu: String + String + Uint8
+    # Budowa payloadu
     payload = (
         encode_string(clean_user) + 
         encode_string(clean_room) + 
         struct.pack("!B", mode)
     )
     
-    # Nagłówek: Typ 0x07, Długość payloadu
     header = struct.pack("!BH", TYPE_USERMODE, len(payload))
     
-    # Debugowanie bajtów przed wysłaniem
-    full_packet = header + payload
-    print(f"DEBUG JOIN: User='{clean_user}', Room='{clean_room}'")
-    print(f"RAW PACKET: {full_packet}")
-    
-    return full_packet
+    print(f"DEBUG JOIN (Pełny): User='{clean_user}', Room='{clean_room}'")
+    return header + payload
 
-
+# Opuszczanie kanału. UserMode: Typ 7, User (string) + Channel (string) + Mode (1 byte)
 def get_leave_channel(my_username, target_channel):
-    """
-    Tabela 9 & 10: Wysyła USERMODE (0x07) z mode 0x00 (leave).
-    """
     clean_user = my_username.split(':')[0].strip()
     if "@" not in clean_user:
-        clean_user = f"{clean_user}@localhost"
+        clean_user = f"{clean_user}@{SERVER_DOMAIN}"
 
-    # Wyciągamy 'test' z '#test@localhost'
-    clean_room = target_channel.lstrip('#').split('@')[0].strip()
+    clean_room = target_channel.strip()
+    if not clean_room.startswith('#'):
+        clean_room = f"#{clean_room}"
+    if "@" not in clean_room:
+        clean_room = f"{clean_room}@{SERVER_DOMAIN}"
     
-    # Mode 0x00 = none/leave (odłączenie)
+    # Mode 0x00 = leave
     mode = 0x00 
     
     payload = (
@@ -108,9 +107,8 @@ def get_leave_channel(my_username, target_channel):
     return header + payload
     
 
-
+# Tworzenie pakietu wiadomości. Message: Typ 5, Source (string) + Target (string) + Timestamp (int64) + Content (string)
 def get_message_packet(source, target, content):
-    """Tabela 6: Typ 5, Wiadomość (Source, Target, Timestamp, Content)"""
     timestamp = int(time.time())
     payload = (
         encode_string(source) +
@@ -134,21 +132,34 @@ def parse_message(payload):
         return {
             "source": source,
             "target": target,
+            "timestamp": timestamp,
             "content": content
         }
     except Exception as e:
-        # błądy
+        # Błędy
         print(f"!!! BŁĄD PROTOKOŁU: {e} | Payload len: {len(payload)}")
         return None
     
 # --- DODATKOWE PROTOKOŁY ---
+
+# Tworzenie pakietu trybu użytkownika. UserMode: Typ 7, User (string) + Channel (string) + Mode (1 byte)
 def get_usermode_packet(user_address, channel_name, mode=0x01):
     # ( 'damian@localhost:9999' -> 'damian@localhost')
     clean_user = user_address.split(':')[0]
     clean_channel = channel_name.split(':')[0]
-
-   
     payload = encode_string(clean_user) + encode_string(clean_channel) + struct.pack("!B", mode)
-    
     header = struct.pack("!BH", TYPE_USERMODE, len(payload))
+    return header + payload
+
+# Pobieranie historii kanału. History: Typ 8, Channel (string) + Since (int64) + Count (int64) + Offset (int64)
+def get_history_packet(channel_address, since_timestamp, count=100, offset=0):
+    #  payload: string (2 bajty długości + dane) + 3x int64 (Q czyli 8 bajtów)
+    payload = (
+        encode_string(channel_address) +
+        struct.pack("!q", since_timestamp) +  # q = int64 (signed)
+        struct.pack("!q", count) +
+        struct.pack("!q", offset)
+    )
+    
+    header = struct.pack("!BH", TYPE_HISTORY, len(payload))
     return header + payload

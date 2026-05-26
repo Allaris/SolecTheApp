@@ -3,11 +3,11 @@ import customtkinter as ctk
 import socket
 import struct
 
-from login_frame import LoginFrame    # Importujemy klasę z pliku login_frame.py
-from main_frame import MainFrame    # Importujemy klasę z pliku main_frame.py
+from server_frame import ServerFrame
+from login_frame import LoginFrame    
+from main_frame import MainFrame    
 
-# --- KONFIGURACJA PROTOKOŁU ---
-import protocols  # Importujemy protokoły z osobnego pliku
+import protocols  
 
 class SolecApp(ctk.CTk):
     def __init__(self):
@@ -16,15 +16,19 @@ class SolecApp(ctk.CTk):
         self.title("Solec Desktop App")
         self.geometry("1280x720")
         
-        # Wspólne zasoby
         self.client_socket = None
         
         # Kontener na widoki
         self.container = ctk.CTkFrame(self)
         self.container.pack(fill="both", expand=True)
         
-        # Startujemy od ekranu logowania
-        self.show_login_screen()
+        # Startujemy od ekranu serwera
+        self.show_server_screen()
+
+    def show_server_screen(self):
+        self.clear_container()
+        server_frame = ServerFrame(self.container, self.show_login_screen)
+        server_frame.pack(fill="both", expand=True)
 
     def show_login_screen(self):
         self.clear_container()
@@ -43,7 +47,6 @@ class SolecApp(ctk.CTk):
     def on_login_success(self, connected_socket, username):
         self.client_socket = connected_socket
         self.show_main_screen(username)
-
 
 
 if __name__ == "__main__":
