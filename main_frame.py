@@ -309,11 +309,13 @@ class MainFrame(ctk.CTkFrame):
 
         try:
             # WYŚWIETLA I ZAPISUJE LOKALNIE OD RAZU 
+            # ZAPIS Z DATĄ I MILISEKUNDAMI ---
             now = datetime.now()
-            time_str = now.strftime('%H:%M:%S.%f')[:12] # Format: HH:MM:SS.mmm (z milisekundami z komputera!)
-            my_clean_nick = self.my_username.split('@')[0].strip().lower()
+            base_time = now.strftime('%Y-%m-%d %H:%M:%S')
+            ms_str = now.strftime('%f')[:3]  # Pierwsze 3 cyfry milisekund
+            time_str = f"{base_time}.{ms_str}"
             
-            # Buduje pełną linię tekstu
+            my_clean_nick = self.my_username.split('@')[0].strip().lower()
             formatted_msg = f"[{time_str}] {my_clean_nick}: {content}"
             
             # Pobiera plik historii dla AKTUALNEGO okna
@@ -430,10 +432,13 @@ class MainFrame(ctk.CTkFrame):
 
                     # Formatowanie wiadomości z timestampem i nadawcą. Timestamp jest konwertowany na czytelny format HH:MM:SS.mmm
                     now = datetime.now()
-                    base_time = datetime.fromtimestamp(data['timestamp']).strftime('%H:%M:%S')
-                    ms_str = now.strftime('%f')[:3]
-                    time_str = f"{base_time}.{ms_str}"
-                    formatted_msg = f"[{time_str}] {s_clean}: {data['content']}"
+                    base_time = datetime.fromtimestamp(data['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
+                    
+                    # Dla spójności formatu  .000 (lub now.strftime('%f')[:3] dla aktualnego czasu)
+                    time_str = f"{base_time}.000"
+                    
+                    msg_signature = f"{s_clean}: {data['content']}"
+                    formatted_msg = f"[{time_str}] {msg_signature}"
                     
                     # Plik historii dla tego czatu (kanał lub użytkownik)
                     filename = self.get_history_filename(chat_id)
@@ -443,7 +448,7 @@ class MainFrame(ctk.CTkFrame):
 
                     # WARUNEK 1: OKNO CZATU JEST OTWARTE - wiadomość jest dla aktualnie oglądanego rozmówcy, więc wyświetla ją od razu i zapisuje do pliku
                     if is_current_chat_open:
-                        # Zapisujemy do pliku bez zbędnego sprawdzania (bo to czat na żywo)
+                        # Zapisuje do pliku bez zbędnego sprawdzania (czat na żywo)
                         try:
                             with open(filename, "a", encoding="utf-8") as f:
                                 f.write(formatted_msg + "\n")
@@ -491,13 +496,12 @@ class MainFrame(ctk.CTkFrame):
                 if not last_line.startswith("["):
                     return 0
                 
-                time_str = last_line[1:9] # Wyciąga "HH:MM:SS"
+                # Wycina dokładnie "YYYY-MM-DD HH:MM:SS" (pierwsze 19 znaków po nawiasie)
+                # Ignoruje kropkę i milisekundy (.mmm)
+                time_str = last_line[1:20] 
                 
                 from datetime import datetime
-                today_date = datetime.now().strftime("%Y-%m-%d")
-                full_time_str = f"{today_date} {time_str}"
-                
-                dt = datetime.strptime(full_time_str, "%Y-%m-%d %H:%M:%S")
+                dt = datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
                 return int(dt.timestamp())
         except Exception as e:
             print(f"DEBUG HISTORIA: Nie udało się odczytać timestampu ({e})")

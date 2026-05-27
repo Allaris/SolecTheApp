@@ -1,22 +1,26 @@
-[14:26:20.275] bt: testowa wiadomość
-[17:26:08.276] damian: damian was here
-[17:29:35.277] damian: test
-[17:31:06.278] bt: dsdsadasvdscv
-[17:32:51.280] damian: You are my fire
-[17:36:40.281] damian: The one desire
-[17:44:06.282] damian: Believe when I say
-[17:57:56.284] d2: I want it that way
-[17:58:56.285] bt: testowa wiadomosc 2
-[18:05:47.285] damian: popcorn
-[18:13:16.285] d2: kawa
-[19:06:16.287] damian: śmietana
-[22:00:05.289] damian: 5%
-[22:03:23.290] damian: 2%
-[22:07:35.290] damian: 1$
-[22:11:06.291] damian: 1%
-[22:15:50.291] damian: 3%
-[22:26:35.294] damian: 16%
-[22:29:28.294] damian: 14%
-[22:29:38.297] damian: 17%
-[22:32:40.298] d2: 18%
-[22:32:47.298] damian: 19%
+[2026-05-26 14:26:20.000] bt: testowa wiadomość
+[2026-05-26 17:26:08.000] damian: damian was here
+[2026-05-26 17:29:35.000] damian: test
+[2026-05-26 17:31:06.000] bt: dsdsadasvdscv
+[2026-05-26 17:32:51.000] damian: You are my fire
+[2026-05-26 17:36:40.000] damian: The one desire
+[2026-05-26 17:44:06.000] damian: Believe when I say
+[2026-05-26 17:57:56.000] d2: I want it that way
+[2026-05-26 17:58:56.000] bt: testowa wiadomosc 2
+[2026-05-26 18:05:47.000] damian: popcorn
+[2026-05-26 18:13:16.000] d2: kawa
+[2026-05-26 19:06:16.000] damian: śmietana
+[2026-05-26 22:00:05.000] damian: 5%
+[2026-05-26 22:03:23.000] damian: 2%
+[2026-05-26 22:07:35.000] damian: 1$
+[2026-05-26 22:11:06.000] damian: 1%
+[2026-05-26 22:15:50.000] damian: 3%
+[2026-05-26 22:26:35.000] damian: 16%
+[2026-05-26 22:29:28.000] damian: 14%
+[2026-05-26 22:29:38.000] damian: 17%
+[2026-05-26 22:32:40.000] d2: 18%
+[2026-05-26 22:32:47.000] damian: 19%
+[2026-05-26 23:33:13.000] d2: 10%
+[2026-05-27 12:41:24.000] d2: 27
+[2026-05-27 12:41:39.000] damian: 28
+[2026-05-27 12:41:54.000] d2: 29
