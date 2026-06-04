@@ -53,7 +53,7 @@ class ServerFrame(ctk.CTkFrame):
 
         # Zapisanie domeny do zmiennej globalnej w protocols.py
         protocols.SERVER_DOMAIN = domain
-        print(f"--- [CONFIG] Zmieniono domenę na: {protocols.SERVER_DOMAIN} ---")
+        # print(f"--- [CONFIG] Zmieniono domenę na: {protocols.SERVER_DOMAIN} ---")
 
         # Callback, który przeniesie nas do ekranu logowania
         self.on_connect_callback()

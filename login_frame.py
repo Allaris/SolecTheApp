@@ -18,13 +18,13 @@ class LoginFrame(ctk.CTkFrame):
         self.user_entry = ctk.CTkEntry(self, placeholder_text="Nazwa użytkownika", width=300, height=40, font=("Arial", 20))
         self.user_entry.place(relx=0.5, rely=0.3, anchor="center")
         #chwilowo na testy
-        self.user_entry.insert(0, "damian")
+        # self.user_entry.insert(0, "damian")
 
         # --- Pole Hasło ---
         self.pass_entry = ctk.CTkEntry(self, placeholder_text="Hasło", width=300, height=40, show="*", font=("Arial", 20))
         self.pass_entry.place(relx=0.5, rely=0.4, anchor="center")
         #chwilowo na testy
-        self.pass_entry.insert(0, "pgcBJ8qY78JM")
+        # self.pass_entry.insert(0, "pgcBJ8qY78JM")
 
         # --- Przycisk Logowania ---
         self.connect_btn = ctk.CTkButton(
@@ -61,9 +61,9 @@ class LoginFrame(ctk.CTkFrame):
             # OPAKOWANIE W TLS przed fizycznym połączeniem
             self.sock = context.wrap_socket(raw_socket, server_hostname=protocols.SERVER_DOMAIN)
             
-            print(f"Rozpoczynanie bezpiecznego połączenia TLS z {protocols.SERVER_DOMAIN}...")
+            # print(f"Rozpoczynanie bezpiecznego połączenia TLS z {protocols.SERVER_DOMAIN}...")
             self.sock.connect((protocols.SERVER_DOMAIN, 9999))
-            print("[TLS] Połączenie zaszyfrowane pomyślnie!")
+            # print("[TLS] Połączenie zaszyfrowane pomyślnie!")
             
             # timeout na oczekiwanie na odpowiedź serwera po zalogowaniu 
             self.sock.settimeout(3.0) 
@@ -90,7 +90,7 @@ class LoginFrame(ctk.CTkFrame):
                 
                 # Udane logowanie
                 if m_type == protocols.TYPE_SUCCESS:
-                    print("Zalogowano pomyślnie przez TLS!")
+                    # print("Zalogowano pomyślnie przez TLS!")
                     self.status_label.configure(text="Zalogowano!", text_color="green")
                     
                     username = self.user_entry.get().strip()

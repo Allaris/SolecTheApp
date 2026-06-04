@@ -27,6 +27,8 @@ TYPE_MESSAGE   = 0x05
 
 TYPE_USERMODE  = 0x07
 TYPE_HISTORY = 0x08
+TYPE_LIST     = 0x09  
+TYPE_LISTITEM = 0x10 
 
 # String: 2 bajty długości + dane UTF-8
 def encode_string(s):
@@ -79,7 +81,7 @@ def get_join_channel(my_username, target_channel):
     
     header = struct.pack("!BH", TYPE_USERMODE, len(payload))
     
-    print(f"DEBUG JOIN (Pełny): User='{clean_user}', Room='{clean_room}'")
+    # print(f"DEBUG JOIN (Pełny): User='{clean_user}', Room='{clean_room}'")
     return header + payload
 
 # Opuszczanie kanału. UserMode: Typ 7, User (string) + Channel (string) + Mode (1 byte)
@@ -163,3 +165,21 @@ def get_history_packet(channel_address, since_timestamp, count=100, offset=0):
     
     header = struct.pack("!BH", TYPE_HISTORY, len(payload))
     return header + payload
+
+def get_list_packet(count=100, offset=0):
+    
+    payload = (
+        struct.pack("!q", count) +
+        struct.pack("!q", offset)
+    )
+    header = struct.pack("!BH", TYPE_LIST, len(payload))
+    return header + payload
+
+def parse_list_item(payload):
+    
+    try:
+        address, _ = decode_string(payload, 0)
+        return address.strip()
+    except Exception as e:
+        print(f"!!! BŁĄD DEKODOWANIA LISTITEM: {e}")
+        return None
