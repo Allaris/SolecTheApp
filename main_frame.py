@@ -102,7 +102,7 @@ class MainFrame(ctk.CTkFrame):
         self.chat_display = ctk.CTkTextbox(self.chat_container, font=("Courier New", 16)) # Zmiana czcionki na stałą szerokość (Courier New) dla idealnego ASCII Artu
         self.chat_display.grid(row=0, column=0, columnspan=2, sticky="nsew", pady=(0, 10))
         
-        # --- NOWOŚĆ: Wrzucamy rysunek anten na start ---
+        # Wrzucam rysunek anten na start 
         self.chat_display.configure(state="normal")
         self.chat_display.insert("1.0", SOLEC_WELCOME_ART)
         self.chat_display.configure(state="disabled")
@@ -467,7 +467,10 @@ class MainFrame(ctk.CTkFrame):
                         ms_str = now.strftime('%f')[:3]
                         time_str = f"{base_time}.{ms_str}"
                     
-                    formatted_msg = f"[{time_str}] {s_clean}: {data['content']}"
+                    # Czyszczenie NULLi przy tworzeniu linijki tekstu
+                    clean_content = data['content'].replace('\x00', '').strip()
+                    formatted_msg = f"[{time_str}] {s_clean}: {clean_content}"
+                    
                     filename = self.get_history_filename(chat_id)
                     
                     # Sprawdzanie duplikatów
